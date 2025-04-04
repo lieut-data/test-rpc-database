@@ -1,45 +1,51 @@
-# Plugin Starter Template
+# RPC Database Test Plugin
 
-[![Build Status](https://github.com/mattermost/mattermost-plugin-starter-template/actions/workflows/ci.yml/badge.svg)](https://github.com/mattermost/mattermost-plugin-starter-template/actions/workflows/ci.yml)
-[![E2E Status](https://github.com/mattermost/mattermost-plugin-starter-template/actions/workflows/e2e.yml/badge.svg)](https://github.com/mattermost/mattermost-plugin-starter-template/actions/workflows/e2e.yml)
+This plugin is designed to test direct database access through the Mattermost Plugin API's StoreService.
 
-This plugin serves as a starting point for writing a Mattermost plugin. Feel free to base your own plugin off this repository.
+It creates a test table in the Mattermost database, inserts 10,000 records, and measures the time it takes to query this table in batches of 100 rows.
 
-To learn more about plugins, see [our plugin documentation](https://developers.mattermost.com/extend/plugins/).
+## Features
 
-This template requires node v16 and npm v8. You can download and install nvm to manage your node versions by following the instructions [here](https://github.com/nvm-sh/nvm). Once you've setup the project simply run `nvm i` within the root folder to use the suggested version of node.
+- Creates a `plugin_test_rpc` table in the Mattermost database
+- Inserts 10,000 test records if they don't exist
+- Measures table creation time, insert time, and query time for batches of 100 records
+- Returns detailed timing information in JSON format
 
-## Getting Started
-Use GitHub's template feature to make a copy of this repository by clicking the "Use this template" button.
+## Usage
 
-Alternatively shallow clone the repository matching your plugin name:
+After installing the plugin, you can access the database test endpoint at:
+
 ```
-git clone --depth 1 https://github.com/mattermost/mattermost-plugin-starter-template com.example.my-plugin
+<your-mattermost-url>/plugins/com.mattermost.test-rpc-database/api/v1/test
 ```
 
-Note that this project uses [Go modules](https://github.com/golang/go/wiki/Modules). Be sure to locate the project outside of `$GOPATH`.
+This endpoint will:
+1. Create a `plugin_test_rpc` table if it doesn't exist
+2. Insert 10,000 records if the table is empty
+3. Query the table in batches of 100 rows
+4. Return timing statistics for each operation
 
-Edit the following files:
-1. `plugin.json` with your `id`, `name`, and `description`:
+### API Response Example
+
 ```json
 {
-    "id": "com.example.my-plugin",
-    "name": "My Plugin",
-    "description": "A plugin to enhance Mattermost."
+  "table_creation_time": "1.234µs",
+  "insert_time": "1.234s",
+  "query_times": [
+    {
+      "offset": 0,
+      "count": 100,
+      "query_time": "5.678ms"
+    },
+    {
+      "offset": 100,
+      "count": 100,
+      "query_time": "4.567ms"
+    },
+    ...
+  ],
+  "total_query_time": "456.789ms"
 }
-```
-
-2. `go.mod` with your Go module path, following the `<hosting-site>/<repository>/<module>` convention:
-```
-module github.com/example/my-plugin
-```
-
-3. `.golangci.yml` with your Go module path:
-```yml
-linters-settings:
-  # [...]
-  goimports:
-    local-prefixes: github.com/example/my-plugin
 ```
 
 Build your plugin:
